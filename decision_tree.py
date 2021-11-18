@@ -35,14 +35,14 @@ class DecisionTree:
             
             gain = self.dataset_entropy-information
 
-            print(f"For column {column}, gain: {gain}")
+            #print(f"For column {column}, gain: {gain}")
             gains.append((column, gain))
         
         gains = sorted(gains, key=lambda x:x[1], reverse=True)
         # print(len(gains))
         return gains[0]
 
-    
+
     def fit(self, X, y):
         data = np.concatenate((X,y), axis=1)
         dataset_entropy, num_pos, num_neg = self.calculate_entropy(data)
@@ -60,39 +60,9 @@ class DecisionTree:
         self.num_neg = num_neg
         # all dataset's entropy
         self.dataset_entropy = dataset_entropy
-        
 
-        self.configure_tree(data)
-    
-
-    
-    def append_node(self, chosen, head):
-        chosen_col = chosen[0]
-        values_for_chosen = np.unique(self.X[:,chosen_col])
-        print("chosen: ",values_for_chosen)
-        for value in values_for_chosen:
-            pos_filter = (self.data[:,chosen_col] == value) & (self.data[:,-1] == 1)
-            neg_filter = (self.data[:,chosen_col] == value) & (self.data[:,-1] == 0)
-            number_of_positives = len(self.data[pos_filter])
-            number_of_negatives = len(self.data[neg_filter])
-            if number_of_positives == 0 or number_of_negatives == 0:
-                # burada bir leaf oluşacak
-                pass
-            else:
-                pass
-                # recursive devam edecek
-
-            # print("negs: ",number_of_negatives)
-            # print("poss: ",number_of_positives)
-            # print("postdata: ", self.data[pos_filter])
-            # print("negdata: ", self.data[neg_filter])
-            
-        exit()
-
-    def configure_tree(self, data):
         chosen_feature = self.calculate_gains(data) # (chosen, gain)
-        self.append_node(chosen_feature, self.head)
-        #self.append_node(chosen_feature[0]) # extract feature index
+        print(chosen_feature)
 
 
 
