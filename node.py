@@ -5,6 +5,9 @@ class Node:
     # Feature column index
     value = None
 
+    # previous node's feature value
+    feature_value = None
+
     is_leaf = None
 
     # [feature1, feature2] 
@@ -16,6 +19,6 @@ class Node:
     def __init__(self, value=None):
         self.value = value
         self.is_leaf = False
-        self.children = defaultdict(lambda:False)
+        self.children = []
     def __str__(self):
-     return f"{self.value} attribute -> {self.is_leaf}, {self.children.keys()}, {self.leaf_value}"
+     return f"{self.value} attribute -> {self.is_leaf}, {len(self.children)}, {self.leaf_value}"

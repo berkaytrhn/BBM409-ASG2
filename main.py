@@ -2,13 +2,14 @@ import pandas as pd
 import numpy as np
 from decision_tree import DecisionTree
 import sys
+from sklearn.model_selection import train_test_split
 
 def encode_age(column, max, min):
-    _range = ((max-min)/5)
+    _range = ((max-min)/2)
     
     intervals = []
 
-    for index in range(1,6):
+    for index in range(1,3):
         temp_max = min+_range
 
         intervals.append((int(min), int(temp_max)))
@@ -56,6 +57,21 @@ def encode_features(data):
 
 
 
+def test(tree, X, y):
+    # testing tree
+    counter = 0
+    correct = 0
+    for index in range(len(X)):
+        
+        X_row = X[index]
+        y_row = y[index]
+        res = tree.predict(X_row, y_row) 
+        if res:
+            correct += 1
+        counter += 1
+        print(f"Current Accuracy: {round(correct/counter*100, 4)}%")
+
+    print(f"Accuracy: {round(correct/counter*100, 4)}%")
 
 def main():
 
@@ -73,24 +89,20 @@ def main():
     
     data = np.array(data)
 
-    train_data = data[:400,:]
-    test_data = data[400:,:]
-    
-    data = np.array(train_data)
-    
-    
-
     X = data[:,:-1]
-    y = data[:,-1].reshape(-1,1)
+    y = data[:,-1]
+    
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20)
+
+    
+    X = X_train
+    y = y_train.reshape(-1,1)
     tree.fit(X, y)
     
-    # testing tree
-    for i in range(5):
-        damn = test_data[i,:-1]
-        res = test_data[i,-1]
-        print(f"damn: {damn}, res: {res}")
-        print(damn.shape)
-        tree.predict(damn, res)
+    test(tree, X_train, y_train)
+
+    print("eqwlekqmekqwem")
+    tree.printTree(tree.head)
 
     _file.close()
 

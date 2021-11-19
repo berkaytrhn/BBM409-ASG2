@@ -12,13 +12,15 @@ class DecisionTree:
     def __init__(self):
         self.head = Node()
 
-    def chose_best_feature(self, _set):
+    def chose_best_feature(self, _set): #features
         # fetaure based entropies and information gains
 
-        relative_entropy, rel_num_pos, rel_num_neg = self.calculate_entropy(_set)
+        relative_entropy, rel_num_pos, rel_num_neg = self.calculate_entropy(_set[:,-1])
 
         gains = []
         for column in range(_set.shape[1]-1):
+        #print("new features: ",features)
+        #for feature in features:
             information = 0
             for value in np.unique(_set[:,column]):
                 # filter for attribute value
@@ -43,7 +45,7 @@ class DecisionTree:
             gains.append((column, gain))
         
         gains = sorted(gains, key=lambda x:x[1], reverse=True)
-        # print(len(gains))
+        #print(gains)
         return gains[0]
 
     def labelStatusCheck(self, examples):
@@ -89,10 +91,56 @@ class DecisionTree:
 
 
     def ID3(self, root, data, features):
-        if not root:
-            root = Node()
 
-        pass
+        print("*****************************")
+        if not root: # may be redundant
+            print("node created from if not root")
+            root = Node()
+        
+        if self.labelStatusCheck(data) == 1:
+            root.is_leaf = True
+            root.leaf_value = 1
+            print(f"all 1 leaf -> {root}")
+            return root
+        elif self.labelStatusCheck(data) == 0:
+            root.is_leaf = True
+            root.leaf_value = 0
+            print(f"all 0 leaf -> {root}")
+            return root
+
+        if len(features) == 0:
+            root.is_leaf = True
+            root.leaf_value = self.mostCommonTargetAttribute(data)
+            print(f"most common label leaf -> {root}")
+            return root
+        
+        #best_feature = self.chose_best_feature(data, features)[0]
+        best_feature = self.chose_best_feature(data)[0]
+        root.value = best_feature
+
+        chosen_feature_values = np.unique(data[:,best_feature])
+        for value in chosen_feature_values:
+            child = Node()
+            root.children.append(child)
+            child.feature_value = value
+            print(f"Not leaf, node -> {root}, child -> {child}")
+            _filter = data[:,best_feature] == value
+            
+            new_data = data[_filter]
+            new_data = np.concatenate((new_data[:,:best_feature], new_data[:,best_feature+1:]), axis=1)
+
+            new_features = self.get_columns(new_data)
+            print(f"new features: {new_features}")
+            #new_features = np.delete(features, np.where(features==best_feature), axis=0)
+            self.ID3(child, new_data, new_features)
+        
+        return root
+
+    def printTree(self, node, level=0):
+        for child in node.children:
+            self.printTree(child, level + 1)
+            print(' ' * 4 * level + '->', node.value)
+            #self.printTree(node.right, level + 1)
 
     def get_columns(self, data):
         return np.array(list(range(len(data[0,:-1]))))
@@ -111,35 +159,29 @@ class DecisionTree:
 
 
         self.ID3(self.head, data, attributes)
-        """
-        # all dataset
-        self.data = data
-        # number of positive examples
-        self.num_pos = num_pos
-        # number of negative examples
-        self.num_neg = num_neg
-        # all dataset's entropy
-        self.dataset_entropy = dataset_entropy
-        
-        chosen_feature = self.calculate_gains(data) # (chosen, gain)
-        print(chosen_feature)
-        """
 
+
+    def traverse(self, node, X, y):
+        print(self.head)
+
+        if node.is_leaf:
+            print(f"predicted: {node.leaf_value}, target: {y}")
+            return node.leaf_value == y
+
+        print(f"parent value: {node.value}")
+        print(f"Current X: {X}")
+        value = node.value
+        temp_feature_value = X[value]
+
+        for child in node.children:
+            feature_value = child.feature_value
+            print(f"child_value: {child.feature_value}")
+            if feature_value == temp_feature_value:
+                X = np.delete(X, temp_feature_value, axis=0)
+                return self.traverse(child, X, y)
 
     def predict(self, X, y):
-        temp = self.head 
-        while not temp.is_leaf:
-            print(temp)
-            attribute = temp.value
-            print(attribute)
-            value = X[attribute]
-            print(value)
-            _next = temp.children[value]
-            temp = _next
-            X = np.delete(X, attribute, axis=0)
-        
-        print(f"predicted: {temp.leaf_value}, target: {y}")
-
+        return self.traverse(self.head, X, y)
 
     def calculate_entropy(self, y):
 
