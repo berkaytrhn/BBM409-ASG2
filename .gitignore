@@ -5,6 +5,7 @@ __pycache__/
 
 test.csv
 gain_algorithm.txt
+test.txt
 
 # C extensions
 *.so
