@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from decision_tree import DecisionTree
+import sys
 
 def encode_age(column, max, min):
     _range = ((max-min)/5)
@@ -54,58 +55,13 @@ def encode_features(data):
     return data 
 
 
-def ID3(root, examples, attributes):
 
-    # NODE EKLENDİĞİNDE EKLENENİ ROOT YAP
-
-    if labelStatusCheck(examples) == 1:
-        # tree change
-        return root
-    elif labelStatusCheck(examples) == -1:
-        # tree change
-        return root
-    elif attributes.size() == 0:
-        # mostCommonTargetAttribute(examples) operations
-        return root
-    else:
-        a = root.calculate_gains(examples)[0]
-        #node creation for a and assigning a to the root node
-        # each value for A (yes or no / 1 2 3 4 5), add branch ro root
-        # yes/no içeren tüm subset sampleları setle (binary için sette iki liste olacak)
-        # -> setlenen şey boş işe altına branch ile leaf ekle ve mostCommonTargetAttribute çağır (setlenen ile değil bir üstüyle)
-        # -> else, ID3(root,set,attributes-A)
-
-
-def labelStatusCheck(examples):
-    posCount = None
-    negCount = None
-
-    for i in examples[:, -1].tolist():
-        if i == 1:
-            posCount = posCount + 1
-        else:
-            negCount = negCount + 1
-
-    if posCount != 0 and negCount == 0:
-        return 1
-    elif negCount != 0 and posCount == 0:
-        return -1
-    else:
-        return 0
-
-def mostCommonTargetAttribute(examples):
-    posCount = None
-    negCount = None
-
-    for i in examples[:, -1].tolist():
-        if i == 1:
-            posCount = posCount + 1
-        else:
-            negCount = negCount + 1
-
-    return max(posCount,negCount)
 
 def main():
+
+    _file =  open("test.txt", "w")
+    sys.stdout = _file
+
 
     data = pd.read_csv("diabetes_data_upload.csv")
 
@@ -116,12 +72,27 @@ def main():
     tree = DecisionTree()
     
     data = np.array(data)
+
+    train_data = data[:400,:]
+    test_data = data[400:,:]
+    
+    data = np.array(train_data)
     
     
+
     X = data[:,:-1]
     y = data[:,-1].reshape(-1,1)
     tree.fit(X, y)
     
+    # testing tree
+    for i in range(5):
+        damn = test_data[i,:-1]
+        res = test_data[i,-1]
+        print(f"damn: {damn}, res: {res}")
+        print(damn.shape)
+        tree.predict(damn, res)
+
+    _file.close()
 
 
 if __name__ == "__main__":
