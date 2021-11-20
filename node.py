@@ -10,6 +10,9 @@ class Node:
 
     is_leaf = None
 
+    # gain for this branch from previous 
+    gain = None
+
     # [feature1, feature2] 
     children = None
 

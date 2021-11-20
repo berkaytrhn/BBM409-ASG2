@@ -152,7 +152,10 @@ class DecisionTree:
             return root
         
         #best_feature = self.chose_best_feature(data, features)[0]
-        best_feature = self.chose_best_feature(data, features)[0]
+        res = self.chose_best_feature(data, features)
+        best_feature = res[0]
+        gain = res[1]
+
         root.value = best_feature
 
         chosen_feature_values = np.unique(data[:,best_feature])
@@ -160,6 +163,7 @@ class DecisionTree:
             child = Node()
             root.children.append(child)
             child.feature_value = value
+            child.gain = gain
             print(f"Not leaf, node -> {root}, child -> {child}")
             _filter = data[:,best_feature] == value
             
@@ -174,8 +178,20 @@ class DecisionTree:
         
         return root
 
+
+
     def display_tree(self, node, column_map, level=0):
         #print(column_map)
+
+        if len(node.children) == 2:
+            child_1, child_2 = node.children
+            if child_1.is_leaf and child_2.is_leaf:
+                print(f"Twig, children:  {child_1.leaf_value}, {child_2.leaf_value}, gain: {node.gain}")
+        elif len(node.children) == 1:
+            child_1 = node.children[0]
+            if child_1.is_leaf:
+                print(f"Twig, children:  {child_1.leaf_value}, gain: {node.gain}")
+ 
         try:
             self.display_tree((node.children)[0], column_map, level + 1)
         except IndexError:
