@@ -11,7 +11,7 @@ class DecisionTree:
         # root node
         self.head = Node()
 
-    def chose_best_feature(self, _set, features):  # features
+    def choose_best_feature(self, _set, features):  # features
         # choosing best feature based on entropies and information gains
 
         relative_entropy, rel_num_pos, rel_num_neg = self.calculate_entropy(_set[:, -1])
@@ -98,7 +98,7 @@ class DecisionTree:
             return root
 
         # choose best feature according to its gain
-        res = self.chose_best_feature(data, features)
+        res = self.choose_best_feature(data, features)
         best_feature = res[0]
         gain = res[1]
 
