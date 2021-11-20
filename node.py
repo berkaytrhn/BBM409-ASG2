@@ -18,5 +18,6 @@ class Node:
         self.value = value
         self.is_leaf = False
         self.children = []
+
     def __str__(self):
-     return f"Feature -> {self.value} -> {self.is_leaf}, {len(self.children)}, {self.leaf_value}"
+        return f"Feature -> {self.value} -> {self.is_leaf}, {len(self.children)}, {self.leaf_value}"
