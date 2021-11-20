@@ -12,7 +12,44 @@ class DecisionTree:
     def __init__(self):
         self.head = Node()
 
-    def chose_best_feature(self, _set): #features
+
+    def chose_best_feature(self, _set, features): #features
+        # fetaure based entropies and information gains
+
+        relative_entropy, rel_num_pos, rel_num_neg = self.calculate_entropy(_set[:,-1])
+
+        gains = []
+        for column in features:
+        #print("new features: ",features)
+        #for feature in features:
+            information = 0
+            for value in np.unique(_set[:,column]):
+                # filter for attribute value
+                temp_filter = (_set[:,column] == value)
+                
+                # using that filter to get attributes
+                temp_samples = _set[temp_filter]
+
+                # calculate entropy and number of samples
+                temp_entropy, temp_pos, temp_neg = self.calculate_entropy(temp_samples[:,-1])
+                
+                # calculate ratio of relevant attribute
+                temp_ratio = (temp_pos+temp_neg)/(rel_num_pos+rel_num_neg)
+                
+                # summing the result with information
+                information += (temp_entropy*temp_ratio)
+                #print((temp_entropy*temp_ratio))
+            
+            gain = relative_entropy-information
+
+            #print(f"For column {column}, gain: {gain}")
+            gains.append((column, gain))
+        
+        gains = sorted(gains, key=lambda x:x[1], reverse=True)
+        #print(gains)
+        return gains[0]
+
+    def chose_best_feature_old(self, _set): #features
         # fetaure based entropies and information gains
 
         relative_entropy, rel_num_pos, rel_num_neg = self.calculate_entropy(_set[:,-1])
@@ -115,7 +152,7 @@ class DecisionTree:
             return root
         
         #best_feature = self.chose_best_feature(data, features)[0]
-        best_feature = self.chose_best_feature(data)[0]
+        best_feature = self.chose_best_feature(data, features)[0]
         root.value = best_feature
 
         chosen_feature_values = np.unique(data[:,best_feature])
@@ -127,23 +164,36 @@ class DecisionTree:
             _filter = data[:,best_feature] == value
             
             new_data = data[_filter]
-            new_data = np.concatenate((new_data[:,:best_feature], new_data[:,best_feature+1:]), axis=1)
+            #new_data = np.concatenate((new_data[:,:best_feature], new_data[:,best_feature+1:]), axis=1)
 
-            new_features = self.get_columns(new_data)
-            print(f"new features: {new_features}")
+            #new_features = self.get_columns(new_data)
+            new_features = self.update_features(features, best_feature)
+            print(f"features: {features}, chosen: {best_feature}")
             #new_features = np.delete(features, np.where(features==best_feature), axis=0)
             self.ID3(child, new_data, new_features)
         
         return root
 
-    def printTree(self, node, level=0):
-        for child in node.children:
-            self.printTree(child, level + 1)
-            print(' ' * 4 * level + '->', node.value)
-            #self.printTree(node.right, level + 1)
+    def display_tree(self, node, column_map, level=0):
+        #print(column_map)
+        try:
+            self.display_tree((node.children)[0], column_map, level + 1)
+        except IndexError:
+            pass
+        name = column_map[node.value] if (node.value != None) else node.leaf_value
+        print(' ' * 4 * level + '->', name)
+        try:
+            self.display_tree((node.children)[1], column_map, level + 1)
+        except IndexError:
+            pass
+        
 
     def get_columns(self, data):
         return np.array(list(range(len(data[0,:-1]))))
+
+    def update_features(self, features, chosen_best):
+        updated = np.delete(features, np.where(features == chosen_best), axis=0)
+        return updated
 
     def fit(self, X, y):
         # setting attributes
@@ -177,7 +227,7 @@ class DecisionTree:
             feature_value = child.feature_value
             print(f"child_value: {child.feature_value}")
             if feature_value == temp_feature_value:
-                X = np.delete(X, temp_feature_value, axis=0)
+                #X = np.delete(X, temp_feature_value, axis=0)
                 return self.traverse(child, X, y)
 
     def predict(self, X, y):

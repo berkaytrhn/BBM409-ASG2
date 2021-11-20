@@ -3,6 +3,7 @@ import numpy as np
 from decision_tree import DecisionTree
 import sys
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
 
 def encode_age(column, max, min):
     _range = ((max-min)/2)
@@ -14,7 +15,6 @@ def encode_age(column, max, min):
 
         intervals.append((int(min), int(temp_max)))
         min = temp_max
-        #min = temp_max
 
     encoded = []
     for age in column:
@@ -83,11 +83,21 @@ def main():
 
     data = encode_features(data)   
 
-    #data.to_csv("test.csv",index=False)
+    columns = data.columns
+    column_map = {index:columns[index] for index in range(len(list(columns))-1)}
+    
+    
+    data.to_csv("test.csv",index=False)
     
     tree = DecisionTree()
     
     data = np.array(data)
+
+    kfold = KFold(n_splits=5, shuffle=True)
+    print("train_test_split shapes:")
+    for _train, _test in kfold.split(data):
+        print("----------")
+        print(_train.shape, _test.shape)
 
     X = data[:,:-1]
     y = data[:,-1]
@@ -99,10 +109,10 @@ def main():
     y = y_train.reshape(-1,1)
     tree.fit(X, y)
     
-    test(tree, X_train, y_train)
+    test(tree, X_test, y_test)
 
     print("eqwlekqmekqwem")
-    tree.printTree(tree.head)
+    tree.display_tree(tree.head, column_map)
 
     _file.close()
 
