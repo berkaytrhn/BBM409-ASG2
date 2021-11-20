@@ -1,6 +1,3 @@
-from collections import defaultdict
-
-
 class Node:
     # Feature column index
     value = None
@@ -8,15 +5,13 @@ class Node:
     # previous node's feature value
     feature_value = None
 
+    # True for leaf nodes, false for other
     is_leaf = None
 
-    # gain for this branch from previous 
-    gain = None
-
-    # [feature1, feature2] 
+    # format -> [feature1, feature2], includes Node instances
     children = None
 
-    # not None for leaves    
+    # not None for leaves, for leaves it specifies prediction    
     leaf_value = None
 
     def __init__(self, value=None):
@@ -24,4 +19,4 @@ class Node:
         self.is_leaf = False
         self.children = []
     def __str__(self):
-     return f"{self.value} attribute -> {self.is_leaf}, {len(self.children)}, {self.leaf_value}"
+     return f"Feature -> {self.value} -> {self.is_leaf}, {len(self.children)}, {self.leaf_value}"

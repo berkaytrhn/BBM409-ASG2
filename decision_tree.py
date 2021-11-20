@@ -1,27 +1,20 @@
 from math import log
 import numpy as np
-from numpy.lib.shape_base import column_stack
-import pandas as pd
 from node import Node
-
 
 class DecisionTree:
 
-
-
     def __init__(self):
+        # root node
         self.head = Node()
 
-
     def chose_best_feature(self, _set, features): #features
-        # fetaure based entropies and information gains
+        # choosing best fetaure based on entropies and information gains
 
         relative_entropy, rel_num_pos, rel_num_neg = self.calculate_entropy(_set[:,-1])
 
         gains = []
         for column in features:
-        #print("new features: ",features)
-        #for feature in features:
             information = 0
             for value in np.unique(_set[:,column]):
                 # filter for attribute value
@@ -38,54 +31,16 @@ class DecisionTree:
                 
                 # summing the result with information
                 information += (temp_entropy*temp_ratio)
-                #print((temp_entropy*temp_ratio))
             
             gain = relative_entropy-information
 
-            #print(f"For column {column}, gain: {gain}")
             gains.append((column, gain))
         
         gains = sorted(gains, key=lambda x:x[1], reverse=True)
-        #print(gains)
-        return gains[0]
-
-    def chose_best_feature_old(self, _set): #features
-        # fetaure based entropies and information gains
-
-        relative_entropy, rel_num_pos, rel_num_neg = self.calculate_entropy(_set[:,-1])
-
-        gains = []
-        for column in range(_set.shape[1]-1):
-        #print("new features: ",features)
-        #for feature in features:
-            information = 0
-            for value in np.unique(_set[:,column]):
-                # filter for attribute value
-                temp_filter = (_set[:,column] == value)
-                
-                # using that filter to get attributes
-                temp_samples = _set[temp_filter]
-
-                # calculate entropy and number of samples
-                temp_entropy, temp_pos, temp_neg = self.calculate_entropy(temp_samples[:,-1])
-                
-                # calculate ratio of relevant attribute
-                temp_ratio = (temp_pos+temp_neg)/(rel_num_pos+rel_num_neg)
-                
-                # summing the result with information
-                information += (temp_entropy*temp_ratio)
-                #print((temp_entropy*temp_ratio))
-            
-            gain = relative_entropy-information
-
-            #print(f"For column {column}, gain: {gain}")
-            gains.append((column, gain))
-        
-        gains = sorted(gains, key=lambda x:x[1], reverse=True)
-        #print(gains)
         return gains[0]
 
     def labelStatusCheck(self, examples):
+        # checks whether all given data label is 0 or 1 or else
         pos_filter = examples[:,-1] == 1
         neg_filter = examples[:,-1] == 0
         
@@ -106,16 +61,7 @@ class DecisionTree:
             return -1
 
     def mostCommonTargetAttribute(self, examples):
-        """
-        posCount = 0
-        negCount = 0
-
-        for i in examples[:, -1].tolist():
-            if i == 1:
-                posCount = posCount + 1
-            else:
-                negCount = negCount + 1
-        """
+        # returns most common label in given data
         pos_filter = examples[:,-1] == 1
         neg_filter = examples[:,-1] == 0
         
@@ -126,32 +72,29 @@ class DecisionTree:
         num_neg = len(negatives)
         return (1 if (num_pos > num_neg) else 0)
 
-
     def ID3(self, root, data, features):
-
-        print("*****************************")
-        if not root: # may be redundant
-            print("node created from if not root")
+        # ID3 general function, calls itself
+        if not root:
             root = Node()
         
         if self.labelStatusCheck(data) == 1:
+            # all labels are 1, becomes leaf
             root.is_leaf = True
             root.leaf_value = 1
-            print(f"all 1 leaf -> {root}")
             return root
         elif self.labelStatusCheck(data) == 0:
+            # all labels are 0, becomes leaf
             root.is_leaf = True
             root.leaf_value = 0
-            print(f"all 0 leaf -> {root}")
             return root
 
         if len(features) == 0:
+            # no feature left, leaf value becomes the most common label value
             root.is_leaf = True
             root.leaf_value = self.mostCommonTargetAttribute(data)
-            print(f"most common label leaf -> {root}")
             return root
         
-        #best_feature = self.chose_best_feature(data, features)[0]
+        # choose best feature according to its gain
         res = self.chose_best_feature(data, features)
         best_feature = res[0]
         gain = res[1]
@@ -160,38 +103,45 @@ class DecisionTree:
 
         chosen_feature_values = np.unique(data[:,best_feature])
         for value in chosen_feature_values:
+            # recursive calls based on children
+
+            # configure child node
             child = Node()
             root.children.append(child)
             child.feature_value = value
-            child.gain = gain
-            print(f"Not leaf, node -> {root}, child -> {child}")
-            _filter = data[:,best_feature] == value
-            
-            new_data = data[_filter]
-            #new_data = np.concatenate((new_data[:,:best_feature], new_data[:,best_feature+1:]), axis=1)
 
-            #new_features = self.get_columns(new_data)
+            # filter data according to chosen best feature
+            _filter = data[:,best_feature] == value
+            new_data = data[_filter]
+
+            # update features (remove chosen feature)
             new_features = self.update_features(features, best_feature)
-            print(f"features: {features}, chosen: {best_feature}")
-            #new_features = np.delete(features, np.where(features==best_feature), axis=0)
+
+            # recursive call
             self.ID3(child, new_data, new_features)
         
         return root
+        
+    def predict(self, X, y):
+        # prediction method
+        y_pred = []
+        y_true = []
+        for index in range(len(X)):
+            
+            X_row = X[index]
+            y_row = y[index]
 
+            # calling  traverse function for traversing and returning prediction
+            pred = self.traverse(self.head, X_row) 
+            
+            # predictions and labels arrays
+            y_pred.append(pred)
+            y_true.append(y_row[0])
 
+        return y_pred, y_true
 
     def display_tree(self, node, column_map, level=0):
-        #print(column_map)
-
-        if len(node.children) == 2:
-            child_1, child_2 = node.children
-            if child_1.is_leaf and child_2.is_leaf:
-                print(f"Twig, children:  {child_1.leaf_value}, {child_2.leaf_value}, gain: {node.gain}")
-        elif len(node.children) == 1:
-            child_1 = node.children[0]
-            if child_1.is_leaf:
-                print(f"Twig, children:  {child_1.leaf_value}, gain: {node.gain}")
- 
+        # text based display function for tree
         try:
             self.display_tree((node.children)[0], column_map, level + 1)
         except IndexError:
@@ -202,54 +152,41 @@ class DecisionTree:
             self.display_tree((node.children)[1], column_map, level + 1)
         except IndexError:
             pass
-        
-
-    def get_columns(self, data):
-        return np.array(list(range(len(data[0,:-1]))))
-
+    
     def update_features(self, features, chosen_best):
+        # update features according to given chosen feature (remove chosen feature)
         updated = np.delete(features, np.where(features == chosen_best), axis=0)
         return updated
 
     def fit(self, X, y):
-        # setting attributes
-        # features
-        self.X = X
-        # labels
-        self.y = y
+        # function for trigger tree build
 
         data = np.concatenate((X,y), axis=1)
 
+        features = np.array(list(range(len(data[0,:-1]))))
+    
+        # first call for ID3
+        self.ID3(self.head, data, features)
 
-        attributes = self.get_columns(data)
-
-
-        self.ID3(self.head, data, attributes)
-
-
-    def traverse(self, node, X, y):
-        print(self.head)
+    def traverse(self, node, X):
+        # tree traverse function
 
         if node.is_leaf:
-            print(f"predicted: {node.leaf_value}, target: {y}")
-            return node.leaf_value == y
+            # returning prediction
+            return node.leaf_value
 
-        print(f"parent value: {node.value}")
-        print(f"Current X: {X}")
         value = node.value
         temp_feature_value = X[value]
 
         for child in node.children:
             feature_value = child.feature_value
-            print(f"child_value: {child.feature_value}")
             if feature_value == temp_feature_value:
-                #X = np.delete(X, temp_feature_value, axis=0)
-                return self.traverse(child, X, y)
-
-    def predict(self, X, y):
-        return self.traverse(self.head, X, y)
+                return self.traverse(child, X)
+        
+        return (node.feature_value+1)%2
 
     def calculate_entropy(self, y):
+        # calculates entropy for given set
 
         num_pos = len(y[y == 1])
         num_neg = len(y[y == 0])
