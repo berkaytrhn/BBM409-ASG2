@@ -7,6 +7,7 @@ test.csv
 gain_algorithm.txt
 test.txt
 temp.py
+/push
 
 # C extensions
 *.so
